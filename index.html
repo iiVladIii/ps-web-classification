@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Архитектурные подходы для многопользовательских React-приложений</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/black.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+          rel="stylesheet">
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-size: 16px;
+        }
+
+        img {
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .reveal img, .reveal video, .reveal iframe {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .reveal img {
+            margin: 0;
+            padding: 0;
+        }
+
+        section {
+            height: 100%;
+        }
+
+        .reveal {
+            background-image: url('./assets/webp/section-bg.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        :root {
+            --r-background-color: rgba(144, 43, 244);
+            --r-main-font: Roboto, Tahoma, Geneva, Verdana, sans-serif;
+            --r-main-font-size: 24px;
+            --r-main-color: #fff;
+            --r-block-margin: 20px;
+            --r-header-mb: 40px;
+            --r-heading-margin: 0 0 var(--r-header-mb) 0;
+            --r-heading-font: Roboto, Tahoma, Geneva, Verdana, sans-serif;
+            --r-heading-color: #fff;
+            --r-heading-line-height: 1.2;
+            --r-heading-letter-spacing: normal;
+            --r-heading-text-transform: uppercase;
+            --r-heading-text-shadow: none;
+            --r-heading-font-weight: 600;
+            --r-heading1-text-shadow: none;
+            --r-heading1-size: 2.5em;
+            --r-heading2-size: 1.6em;
+            --r-heading3-size: 1.2em;
+            --r-heading4-size: 1em;
+            --r-code-font: monospace;
+            --r-link-color: #ffffff;
+            --r-link-color-dark: #068de9;
+            --r-link-color-hover: #dddddd;
+            --r-selection-background-color: rgba(66, 175, 250, 0.75);
+            --r-selection-color: #fff;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 3em;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .logo .logo__container:nth-child(1) {
+            width: 200px;
+        }
+
+        .logo .logo__container:nth-child(2) {
+            width: 230px;
+            margin-top: 20px;
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .content--center {
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview__authors {
+            margin-top: 60px;
+            text-align: right;
+            align-self: flex-end;
+        }
+
+        .reveal .controls {
+            left: 95px;
+            bottom: 0;
+            right: auto;
+        }
+
+        .reveal .slide-number {
+            font-size: 0.7em;
+        }
+
+        .reveal table, .reveal p {
+            margin: 0;
+        }
+
+        .section__title {
+            text-align: left;
+        }
+
+        .section--full {
+            position: relative;
+            display: flex !important;
+            flex-direction: column;
+            max-height: 100%;
+            overflow: hidden;
+        }
+
+        .section__content {
+            border-radius: 50px;
+            width: 100%;
+            flex: 1;
+            background: var(--r-main-color);
+            display: flex;
+            padding: 1em 1em 0.5em;
+        }
+
+        .section__main {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 1em;
+            color: #333;
+        }
+
+        .section__main h3 {
+            color: var(--r-background-color);
+            margin-bottom: 0.5em;
+            text-align: left;
+        }
+
+        .section__main h4 {
+            color: var(--r-background-color);
+            font-size: 1em;
+            margin-bottom: 0.3em;
+            text-align: left;
+        }
+
+        .section__main ul {
+            list-style-position: inside;
+            padding-left: 0;
+        }
+
+        .section__main li {
+            margin-bottom: 0.5em;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .section__main p {
+            font-size: 0.9em;
+            line-height: 1.5;
+            margin-bottom: 0.5em;
+        }
+
+        .section__right {
+            display: flex;
+            width: 6%;
+            align-items: flex-start;
+            justify-content: flex-end;
+            gap: 0.3em;
+            flex-shrink: 0;
+        }
+
+        .section__circle {
+            content: "";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            background: var(--r-background-color);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .section__circle::before, .section__circle::after {
+            content: "";
+            position: absolute;
+            width: 78%;
+            border-radius: 10px;
+            height: 4px;
+            background: var(--r-main-color);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .section__circle:nth-child(1)::after {
+            content: none;
+        }
+
+        .section__circle:nth-child(2)::before {
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+
+        .section__circle:nth-child(2)::after {
+            transform: translate(-50%, -50%) rotate(-45deg);
+        }
+
+        .highlight {
+            color: var(--r-background-color);
+            font-weight: 600;
+        }
+
+        .criteria-box {
+            text-align: left;
+            background: #f5f5f5;
+            padding: 0.5em;
+            border-radius: 12px;
+            border-left: 4px solid var(--r-background-color);
+        }
+
+        .criteria-box h4 {
+            margin-top: 0;
+        }
+
+        .criteria-box p {
+            margin-bottom: 0;
+        }
+
+        .criteria-box ul {
+            margin-top: 0.5em;
+        }
+
+        .image-placeholder {
+            background: #f0f0f0;
+            border: 2px dashed var(--r-background-color);
+            border-radius: 20px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75em;
+        }
+
+        .table-wrapper {
+            border: 2px solid var(--r-background-color);
+            border-radius: 20px;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        table thead {
+            background: var(--r-background-color);
+            color: #fff;
+        }
+
+        .reveal table th {
+            padding: 1em;
+            text-align: left;
+            font-weight: 600;
+            text-transform: none;
+            border-right: 1px solid var(--r-main-color);
+        }
+
+        .reveal table th:last-child {
+            border-right: none;;
+        }
+
+        .reveal table td {
+            padding: 0.8em;
+            border-bottom: 1px solid #ddd;
+            border-right: 1px solid var(--r-background-color);
+            color: #333;
+        }
+
+        .reveal table td:last-child {
+            border-right: none;;
+        }
+
+        .reveal table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1em;
+        }
+
+        .title-slide {
+            background: linear-gradient(135deg, var(--r-background-color) 0%, rgba(144, 43, 244, 0.7) 100%);
+        }
+
+        .title-slide .content {
+            text-align: center;
+        }
+
+        .emoji-list {
+            display: grid;
+            gap: 0.8em;
+        }
+
+        .emoji-list p {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            font-size: 0.9em;
+        }
+
+        /* SVG Icons Styles */
+        .icon {
+            width: 1.2em;
+            height: 1.2em;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.3em;
+            fill: var(--r-background-color);
+        }
+
+        .criteria-box .icon {
+            fill: var(--r-background-color);
+        }
+
+        .emoji-list .icon {
+            width: 1.4em;
+            height: 1.4em;
+            flex-shrink: 0;
+        }
+
+        .table-wrapper .icon {
+            width: 1.1em;
+            height: 1.1em;
+            vertical-align: middle;
+            margin-right: 0.2em;
+        }
+
+        .criteria-card {
+            background: #f5f5f5;
+            padding: 0.3em 0.5em;
+            border-radius: 12px;
+            border-left: 4px solid var(--r-background-color);
+            display: flex;
+            gap: 0.6em;
+            align-items: flex-start;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .criteria-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .criteria-card .icon {
+            width: 2em;
+            height: 2em;
+            flex-shrink: 0;
+            margin-top: 0.2em;
+        }
+
+        .criteria-card__content {
+            flex: 1;
+        }
+
+        .criteria-card__content h4 {
+            font-size: 1em
+        }
+
+        .criteria-card__content p {
+            margin: 0;
+            font-size: 0.7em;
+            line-height: 1.4;
+            color: #555;
+            text-align: left;
+        }
+
+        .criteria-intro {
+            background: linear-gradient(135deg, rgba(144, 43, 244, 0.1) 0%, rgba(144, 43, 244, 0.05) 100%);
+            padding: .5em 1em;
+            border-radius: 12px;
+            border: 2px solid var(--r-background-color);
+        }
+
+        .criteria-intro p {
+            margin: 0;
+            font-size: 0.8em;
+            line-height: 1.5;
+        }
+
+        .grid-criteria {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.45em;
+        }
+    </style>
+    <script>
+        const BASE_PATH = '/ps-web-classification';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const images = document.querySelectorAll('img');
+            images.forEach(img => {
+                const currentSrc = img.getAttribute('src');
+                if (currentSrc && !currentSrc.startsWith('http://') && !currentSrc.startsWith('https://')) {
+                    if (!currentSrc.startsWith(BASE_PATH)) {
+                        img.setAttribute('src', `${BASE_PATH}${currentSrc}`);
+                    }
+                }
+            });
+        });
+
+    </script>
+</head>
+<body>
+
+<svg style="display: none;">
+    <defs>
+        <symbol id="icon-desktop" viewBox="0 0 24 24">
+            <path fill="currentColor"
+                  d="M3.412 1.32c-1.178 0-1.584.122-2.031.366A2.449 2.449 0 00.365 2.7C.122 3.148 0 3.553 0 4.771v9.137c0 1.178.122 1.585.365 2.031.244.447.57.772 1.016 1.016.406.244.813.365 2.031.365h2.72l1.138-1.34H3.006c-.325.041-.69-.001-1.016-.164-.203-.08-.366-.283-.488-.486-.122-.325-.203-.65-.162-1.016V4.406c-.04-.325 0-.69.162-1.015.081-.203.285-.365.488-.487.325-.122.65-.204 1.016-.164h17.867c.325-.04.69.002 1.016.164.203.082.364.284.486.487.122.324.203.65.162 1.015v9.95c.04.324 0 .69-.162 1.015-.081.203-.283.365-.486.486-.325.122-.65.203-1.016.163h-4.264l1.137 1.341 2.803-.04c1.218 0 1.623-.122 2.07-.366a2.449 2.449 0 001.016-1.016c.243-.406.365-.813.365-2.03V4.77c0-1.218-.122-1.623-.365-2.07a2.449 2.449 0 00-1.016-1.015c-.447-.244-.852-.366-2.07-.366H3.412zm8.451 12.198a.501.501 0 00-.37.187l-7.106 8.162a.465.465 0 00-.123.326.47.47 0 00.488.487h14.293c.122 0 .245-.04.326-.121.203-.163.204-.489.041-.692l-7.107-8.162-.041-.04a.594.594 0 00-.4-.147z"/>
+        </symbol>
+
+        <symbol id="icon-performance" viewBox="0 0 24 24">
+            <path d="M3 13h2v8H3v-8zm4-4h2v12H7V9zm4-6h2v18h-2V3zm4 3h2v15h-2V6zm4 4h2v11h-2V10z"/>
+        </symbol>
+
+        <symbol id="icon-scalability" viewBox="0 0 24 24">
+            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+        </symbol>
+
+        <symbol id="icon-resilience" viewBox="0 0 24 24">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+        </symbol>
+
+        <symbol id="icon-consistency" viewBox="0 0 24 24">
+            <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+        </symbol>
+
+        <symbol id="icon-developer" viewBox="0 0 24 24">
+            <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+        </symbol>
+
+        <symbol id="icon-security" viewBox="0 0 24 24">
+            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+        </symbol>
+
+        <symbol id="icon-users" viewBox="0 0 24 24">
+            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+        </symbol>
+
+        <symbol id="icon-websocket" viewBox="0 0 256 193">
+            <path d="M192.440223,144.644612 L224.220111,144.644612 L224.220111,68.3393384 L188.415329,32.5345562 L165.943007,55.0068785 L192.440223,81.5040943 L192.440223,144.644612 L192.440223,144.644612 Z M224.303963,160.576482 L178.017688,160.576482 L113.451687,160.576482 L86.954471,134.079266 L98.1906322,122.843105 L120.075991,144.728464 L165.104487,144.728464 L120.746806,100.286931 L132.06682,88.9669178 L176.4245,133.324599 L176.4245,88.2961022 L154.622994,66.4945955 L165.775303,55.3422863 L110.684573,0 L56.3485097,0 L56.3485097,0 L0,0 L31.6960367,31.6960367 L31.6960367,31.7798886 L31.8637406,31.7798886 L97.4359646,31.7798886 L120.662954,55.0068785 L86.7029152,88.9669178 L63.4759253,65.7399279 L63.4759253,47.7117589 L31.6960367,47.7117589 L31.6960367,78.9046839 L86.7029152,133.911562 L64.3144448,156.300033 L100.119227,192.104815 L154.45529,192.104815 L256,192.104815 L256,192.104815 L224.303963,160.576482 L224.303963,160.576482 Z"
+                  fill="currentColor"/>
+        </symbol>
+
+        <symbol id="icon-http" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 5-5v3h4v4h-4v3zm10-5l-5 5v-3h-4v-4h4V7l5 5z"/>
+        </symbol>
+
+        <symbol id="icon-webrtc" viewBox="0 0 24 24">
+            <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+        </symbol>
+
+        <symbol id="icon-hybrid" viewBox="0 0 24 24">
+            <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/>
+        </symbol>
+
+        <symbol id="icon-server" viewBox="0 0 24 24" fill="none">
+            <path d="M14 21H5C4.06812 21 3.60218 21 3.23463 20.8478C2.74458 20.6448 2.35523 20.2554 2.15224 19.7654C2 19.3978 2 18.9319 2 18C2 17.0681 2 16.6022 2.15224 16.2346C2.35523 15.7446 2.74458 15.3552 3.23463 15.1522C3.60218 15 4.06812 15 5 15H19C19.9319 15 20.3978 15 20.7654 15.1522C21.2554 15.3552 21.6448 15.7446 21.8478 16.2346C22 16.6022 22 17.0681 22 18C22 18.9319 22 19.3978 21.8478 19.7654C21.6448 20.2554 21.2554 20.6448 20.7654 20.8478C20.3978 21 19.9319 21 19 21H18"
+                  stroke="var(--r-background-color)" stroke-width="1.5"/>
+            <path d="M2 12C2 11.0681 2 10.6022 2.15224 10.2346C2.35523 9.74458 2.74458 9.35523 3.23463 9.15224C3.60218 9 4.06812 9 5 9H19C19.9319 9 20.3978 9 20.7654 9.15224C21.2554 9.35523 21.6448 9.74458 21.8478 10.2346C22 10.6022 22 11.0681 22 12C22 12.9319 22 13.3978 21.8478 13.7654C21.6448 14.2554 21.2554 14.6448 20.7654 14.8478C20.3978 15 19.9319 15 19 15H5C4.06812 15 3.60218 15 3.23463 14.8478C2.74458 14.6448 2.35523 14.2554 2.15224 13.7654C2 13.3978 2 12.9319 2 12Z"
+                  stroke="var(--r-background-color)" stroke-width="1.5"/>
+            <path d="M10 3H19C19.9319 3 20.3978 3 20.7654 3.15224C21.2554 3.35523 21.6448 3.74458 21.8478 4.23463C22 4.60218 22 5.06812 22 6C22 6.93188 22 7.39782 21.8478 7.76537C21.6448 8.25542 21.2554 8.64477 20.7654 8.84776C20.3978 9 19.9319 9 19 9H5C4.06812 9 3.60218 9 3.23463 8.84776C2.74458 8.64477 2.35523 8.25542 2.15224 7.76537C2 7.39782 2 6.93188 2 6C2 5.06812 2 4.60218 2.15224 4.23463C2.35523 3.74458 2.74458 3.35523 3.23463 3.15224C3.60218 3 4.06812 3 5 3H6"
+                  stroke="var(--r-background-color)" stroke-width="1.5"/>
+            <circle cx="5" cy="12" r="1" fill="var(--r-background-color)"/>
+            <circle cx="5" cy="6" r="1" fill="var(--r-background-color)"/>
+            <circle cx="5" cy="18" r="1" fill="var(--r-background-color)"/>
+        </symbol>
+
+        <symbol id="icon-client" viewBox="0 0 24 24">
+            <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
+        </symbol>
+
+        <symbol id="icon-balance" viewBox="0 0 24 24">
+            <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm6 9.09c0 4-2.55 7.7-6 8.83-3.45-1.13-6-4.82-6-8.83v-4.7l6-2.25 6 2.25v4.7zM9.91 8.5L8.5 9.91 10.59 12 8.5 14.09l1.41 1.41L12 13.42l2.09 2.08 1.41-1.41L13.42 12l2.08-2.09-1.41-1.41L12 10.59 9.91 8.5z"/>
+        </symbol>
+
+        <symbol id="icon-network" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 5-5v3h4v4h-4v3zm10-5l-5 5v-3h-4v-4h4V7l5 5z"/>
+        </symbol>
+
+        <symbol id="icon-lock" viewBox="0 0 24 24">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+        </symbol>
+
+        <symbol id="icon-transform" viewBox="0 0 24 24">
+            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z M7 9h5v1H7z"/>
+        </symbol>
+
+        <symbol id="icon-crdt" viewBox="0 0 24 24">
+            <path d="M12 2l-5.5 9h11L12 2zm0 3.84L13.93 9h-3.87L12 5.84zM17.5 13c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5-2.01-4.5-4.5-4.5zm0 7c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5zM3 21.5h8v-8H3v8zm2-6h4v4H5v-4z"/>
+        </symbol>
+
+        <symbol id="icon-clock" viewBox="0 0 24 24">
+            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+        </symbol>
+
+        <symbol id="icon-consensus" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </symbol>
+
+        <symbol id="icon-direct" viewBox="0 0 24 24">
+            <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+        </symbol>
+
+        <symbol id="icon-middleware" viewBox="0 0 24 24">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+        </symbol>
+
+        <symbol id="icon-event" viewBox="0 0 24 24">
+            <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>
+        </symbol>
+
+        <symbol id="icon-stream" viewBox="0 0 24 24">
+            <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z"/>
+        </symbol>
+
+    </defs>
+</svg>
+
+<div class="reveal">
+    <div class="slides">
+
+        <section
+                data-transition="concave"
+                data-background-image="./assets/webp/preview-bg.webp"
+                data-background-size="cover"
+                data-background-position="center"
+                data-background-repeat="no-repeat"
+        >
+            <div class="logo">
+                <div class="logo__container">
+                    <img class="logo__img" src="/assets/webp/itmo_logo.webp" alt="">
+                </div>
+                <div class="logo__container">
+                    <img class="logo__img" src="/assets/webp/sut_logo_orange.webp" alt="">
+                </div>
+            </div>
+            <div class="content content--center">
+                <h1 class="preview__title" style="margin-top: auto">Архитектурные подходы <br> для многопользовательских
+                    React-приложений</h1>
+                <h3>Классификация и критерии эффективности</h3>
+                <div class="preview__authors">
+                    <div>Н. Ф. Махмутова</div>
+                    <div>В. Е. Филимонов</div>
+                </div>
+                <h3 style="margin-top: auto">2025</h3>
+            </div>
+        </section>
+
+        <section
+                class="section--full">
+            <h2 class="section__title">Актуальность и цель исследования</h2>
+            <div class="section__content">
+                <div class="section__main">
+                    <h3>Актуальность проблемы</h3>
+                    <ul>
+                        <li>Современные веб-приложения включают функции <span class="highlight">коллективного редактирования</span>
+                        </li>
+                        <li>Множественные пользователи одновременно работают с общими данными</li>
+                        <li>Требуются специальные решения: синхронизация состояний, разрешение конфликтов, минимальные
+                            задержки
+                        </li>
+                        <li><span class="highlight">Проблема:</span> отсутствие единой системы оценки подходов</li>
+                    </ul>
+
+                    <h3>Цель исследования</h3>
+                    <div class="criteria-box">
+                        <p>
+                            Разработка <span class="highlight">комплекса критериев</span> для объективного сравнения
+                            архитектурных решений, охватывающего производительность, масштабируемость,
+                            отказоустойчивость и другие критически важные аспекты
+                        </p>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+        <section class="section--full">
+            <h2 class="section__title">Анализ существующих классификаций</h2>
+            <div class="section__content">
+                <div class="section__main" style="gap: 0.3em;">
+                    <div class="criteria-intro">
+                        <p>
+                            Анализ научной литературы выявил отсутствие единой комплексной классификации подходов
+                            к проектированию многопользовательских веб-приложений. <strong>Существующие работы</strong>
+                            рассматривают отдельные аспекты архитектуры.
+                        </p>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table style="font-size: 0.6em;">
+                            <thead>
+                            <tr>
+                                <th style="width: 25%;">Источник</th>
+                                <th style="width: 35%;">Рассматриваемые аспекты</th>
+                                <th style="width: 40%;">Ограничения</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><strong>Sun, Ellis (2020)</strong><br>ACM Computing Surveys</td>
+                                <td>Механизмы согласованности: OT и CRDT подходы для collaborative editing</td>
+                                <td>Фокус только на алгоритмах синхронизации, не рассматривает архитектуру в целом</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Johnson, Lee (2021)</strong><br>IEEE Trans. on SE</td>
+                                <td>Паттерны управления состоянием в современных веб-приложениях (Redux, MobX)</td>
+                                <td>Ограничен клиентской частью, отсутствует классификация по распределению
+                                    ответственности
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Anderson, Roberts (2022)</strong><br>IEEE Software</td>
+                                <td>Паттерны интеграции real-time коммуникации (WebSockets, HTTP)</td>
+                                <td>Рассматривает только протоколы связи, без учета моделей согласованности</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Carter, Moore (2022)</strong><br>IEEE Software</td>
+                                <td>Гибридные архитектуры, комбинирующие клиент-серверные подходы</td>
+                                <td>Описывает конкретные комбинации, не предлагает общую классификацию</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="conclusion-highlight" style="margin-top: 0.5em;">
+                        <h3 style="font-size: 1em; margin-bottom: 0.3em;">Вывод</h3>
+                        <p style="font-size: 0.75em;">
+                            <strong>Ни один из рассмотренных источников не предлагает комплексной классификации</strong>,
+                            охватывающей все ключевые аспекты: распределение ответственности, механизмы согласованности,
+                            модели коммуникации и интеграцию с системами управления состоянием. <br>
+                            <strong>Необходимость:</strong> разработка унифицированной многомерной классификации для
+                            систематизации архитектурных решений.
+                        </p>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <section class="section--full">
+            <h2 class="section__title">Классификация подходов</h2>
+            <div class="section__content">
+                <div class="section__main" style="gap: 5px">
+                    <div style="width: 85%; margin: 0 auto;">
+                        <img src="/assets/webp/classification.webp"
+                             alt="">
+                    </div>
+                    <div class="image-placeholder">
+                        Рис. 1. Классификация подходов к построению многопользовательских React-приложений
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section__title">Классификация по модели распределения ответственности</h2>
+            <div class="section__content">
+                <div class="section__main" style="gap: 0.8em;">
+                    <div class="criteria-intro">
+                        <p>
+                            Модель распределения ответственности определяет, <strong>где выполняется основная
+                            логика</strong>
+                            управления состоянием и обработки операций. Выбор архитектуры влияет на производительность,
+                            безопасность и сложность реализации системы.
+                        </p>
+                    </div>
+
+                    <div class="grid-criteria">
+                        <div class="criteria-card">
+                            <svg class="icon">
+                                <use href="#icon-server"/>
+                            </svg>
+                            <div class="criteria-card__content">
+                                <h4>Сервер-центрические архитектуры</h4>
+                                <p>Централизованный контроль состояния на стороне сервера. Гарантирует высокий уровень
+                                    безопасности и согласованности данных, однако создает узкое место при
+                                    масштабировании
+                                    и увеличивает задержки операций</p>
+                            </div>
+                        </div>
+
+                        <div class="criteria-card">
+                            <svg class="icon">
+                                <use href="#icon-client"/>
+                            </svg>
+                            <div class="criteria-card__content">
+                                <h4>Клиент-центрические подходы</h4>
+                                <p>Перенос логики управления состоянием на клиента. Обеспечивает мгновенную отзывчивость
+                                    интерфейса и возможность автономной работы, но требует сложных алгоритмов
+                                    синхронизации
+                                    и разрешения конфликтов</p>
+                            </div>
+                        </div>
+
+                        <div class="criteria-card">
+                            <svg class="icon">
+                                <use href="#icon-balance"/>
+                            </svg>
+                            <div class="criteria-card__content">
+                                <h4>Гибридные архитектуры</h4>
+                                <p>Динамическое распределение ответственности между клиентом и сервером в зависимости
+                                    от типа операций. Оптимизирует баланс между отзывчивостью, согласованностью и
+                                    безопасностью
+                                    за счет повышенной сложности проектирования</p>
+                            </div>
+                        </div>
+
+                        <div class="criteria-card">
+                            <svg class="icon">
+                                <use href="#icon-network"/>
+                            </svg>
+                            <div class="criteria-card__content">
+                                <h4>Федеративные решения</h4>
+                                <p>Распределение функциональности между специализированными микросервисами. Максимальная
+                                    модульность и горизонтальная масштабируемость достигаются ценой сложности
+                                    координации,
+                                    развертывания и мониторинга распределенной системы</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section__title">Классификация по модели распределения ответственности</h2>
+            <div class="section__content">
+                <div class="section__main">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Тип архитектуры</th>
+                                <th>Преимущества</th>
+                                <th>Недостатки</th>
+                                <th>Область применения</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><strong>Сервер-центрическая</strong></td>
+                                <td>Высокий контроль безопасности и согласованности</td>
+                                <td>Повышенная задержка, узкое место при масштабировании</td>
+                                <td>Системы с высокими требованиями к безопасности, низкая частота обновлений</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Клиент-центрическая</strong></td>
+                                <td>Высокая отзывчивость, устойчивость к сетевым проблемам</td>
+                                <td>Сложности с обеспечением согласованности</td>
+                                <td>Системы с требованиями к отзывчивости и автономной работе</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Гибридная</strong></td>
+                                <td>Оптимальный баланс между отзывчивостью, согласованностью и безопасностью</td>
+                                <td>Сложность проектирования</td>
+                                <td>Комплексные системы с разнообразными требованиями</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Федеративная</strong></td>
+                                <td>Модульность, масштабируемость</td>
+                                <td>Сложность согласованности между сервисами, развертывания и мониторинга</td>
+                                <td>Крупные распределенные системы</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+
+        <style>
+            .consistency-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.6em;
+            }
+
+            .consistency-card {
+                background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+                padding: 0.3em 0.7em;
+                border-radius: 15px;
+                border: 2px solid var(--r-background-color);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .consistency-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, var(--r-background-color), rgba(144, 43, 244, 0.5));
+            }
+
+            .consistency-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 20px rgba(144, 43, 244, 0.3);
+                border-color: rgba(144, 43, 244, 0.8);
+            }
+
+            .consistency-card .icon {
+                width: 2em;
+                height: 2em;
+                /*margin-bottom: 0.5em;*/
+                transition: transform 0.3s ease;
+            }
+
+            .consistency-card:hover .icon {
+                transform: scale(1.1) rotate(5deg);
+            }
+
+            .consistency-card h4 {
+                margin: 0.3em 0;
+                font-size: 0.9em;
+            }
+
+            .consistency-card p {
+                margin: 0;
+                font-size: 0.65em;
+                line-height: 1.4;
+                color: #555;
+            }
+
+        </style>
+        <section class="section--full">
+            <h2 class="section__title" style="margin-bottom: 0.2em">Классификация по механизмам обеспечения
+                согласованности</h2>
+            <div class="section__content">
+                <div class="section__main" style="gap: 0.5em;">
+                    <div class="criteria-intro">
+                        <p>
+                            Механизмы согласованности определяют, <strong>как система разрешает конфликты</strong>
+                            при одновременном редактировании. Выбор алгоритма критичен для пользовательского опыта
+                            и надежности системы.
+                        </p>
+                    </div>
+
+                    <div class="consistency-grid">
+                        <div class="consistency-card">
+                            <svg class="icon">
+                                <use href="#icon-lock"/>
+                            </svg>
+                            <h4 style="text-align: center">Последовательная согласованность</h4>
+                            <p>Строгая упорядоченность всех операций. Гарантирует идентичный порядок изменений для всех
+                                клиентов, обеспечивая предсказуемость системы за счет производительности</p>
+                        </div>
+
+                        <div class="consistency-card">
+                            <svg class="icon">
+                                <use href="#icon-transform"/>
+                            </svg>
+                            <h4 style="text-align: center">Операционные преобразования (OT)</h4>
+                            <p>Динамическая трансформация конфликтующих операций. Эффективно разрешает конфликты при
+                                параллельном
+                                редактировании текста, но требует сложной реализации для структурированных данных</p>
+                        </div>
+
+                        <div class="consistency-card">
+                            <svg class="icon">
+                                <use href="#icon-crdt"/>
+                            </svg>
+                            <h4>CRDT-структуры</h4>
+                            <p>Коммутативные типы данных без централизованной координации. Математически гарантируют
+                                конвергенцию состояния и высокую устойчивость к сетевым разделениям</p>
+                        </div>
+
+                        <div class="consistency-card" style="margin-left: 50%; width: 100%">
+                            <svg class="icon">
+                                <use href="#icon-clock"/>
+                            </svg>
+                            <h4>Last-Writer-Wins (LWW)</h4>
+                            <p>Разрешение конфликтов по временным меткам. Простота реализации и минимальные накладные
+                                расходы
+                                компенсируются риском потери данных при конкурентных изменениях</p>
+                        </div>
+
+                        <div class="consistency-card" style="margin-left: 50%; width: 100%">
+                            <svg class="icon">
+                                <use href="#icon-consensus"/>
+                            </svg>
+                            <h4>Консенсус-протоколы</h4>
+                            <p>Распределенное согласование через Raft, Paxos или аналоги. Максимальная надежность
+                                и fault-tolerance достигаются значительными накладными расходами на
+                                производительность</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section__title">Классификация по модели коммуникации</h2>
+            <div class="section__content">
+                <div class="section__main">
+                    <div class="grid-2" style="gap: 0.8em;">
+                        <div class="criteria-box" style="padding: 0.8em;">
+                            <h4>
+                                <svg class="icon">
+                                    <use href="#icon-websocket"/>
+                                </svg>
+                                WebSockets
+                            </h4>
+                            <p>Постоянные двунаправленные соединения с минимальной задержкой (< 50 мс).
+                                Идеальны для real-time синхронизации, но требуют специализированной инфраструктуры
+                                и сложного управления соединениями при масштабировании</p>
+                        </div>
+                        <div class="criteria-box" style="padding: 0.8em;">
+                            <h4>
+                                <svg class="icon">
+                                    <use href="#icon-http"/>
+                                </svg>
+                                HTTP-протоколы
+                            </h4>
+                            <p>Поддержка Long Polling, Server-Sent Events и стандартного REST API.
+                                Максимальная совместимость с существующей инфраструктурой и легкая интеграция
+                                с CDN достигаются ценой более высоких задержек (200-500 мс)</p>
+                        </div>
+                        <div class="criteria-box" style="padding: 0.8em;">
+                            <h4>
+                                <svg class="icon">
+                                    <use href="#icon-webrtc"/>
+                                </svg>
+                                WebRTC технологии
+                            </h4>
+                            <p>Прямая peer-to-peer коммуникация между клиентами без промежуточного сервера.
+                                Минимальные задержки (< 30 мс) и снижение нагрузки на инфраструктуру,
+                                но сложности с NAT traversal и необходимость fallback-механизмов</p>
+                        </div>
+                        <div class="criteria-box" style="padding: 0.8em;">
+                            <h4>
+                                <svg class="icon">
+                                    <use href="#icon-hybrid"/>
+                                </svg>
+                                Гибридные модели
+                            </h4>
+                            <p>Адаптивное переключение между протоколами на основе сетевых условий и требований.
+                                WebSockets для критичных операций с автоматическим fallback на HTTP при нестабильном
+                                соединении обеспечивает максимальную надежность</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section__title">Классификация по интеграции с системами управления состоянием</h2>
+            <div class="section__content">
+                <div class="section__main">
+                    <div class="grid-2" style="gap: 0.8em;">
+                        <div class="criteria-box" style="padding: 0.8em;">
+                            <h4>
+                                <svg class="icon">
+                                    <use href="#icon-direct"/>
+                                </svg>
+                                Прямая интеграция
+                            </h4>
+                            <p>Непосредственная связь с Redux, MobX или Context API. Минимальная сложность внедрения
+                                и концептуальная прозрачность компенсируются тесной связанностью компонентов
+                                и ограниченной гибкостью при масштабировании</p>
+                        </div>
+                        <div class="criteria-box" style="padding: 0.8em;">
+                            <h4>
+                                <svg class="icon">
+                                    <use href="#icon-middleware"/>
+                                </svg>
+                                Middleware-подход
+                            </h4>
+                            <p>Промежуточный слой для обработки синхронизации (Redux middleware, эффекты).
+                                Централизованная логика side-effects и улучшенная тестируемость обеспечивают
+                                модульность без потери производительности</p>
+                        </div>
+                        <div class="criteria-box" style="padding: 0.8em;">
+                            <h4>
+                                <svg class="icon">
+                                    <use href="#icon-event"/>
+                                </svg>
+                                Событийные модели
+                            </h4>
+                            <p>Архитектура на основе event bus и pub/sub паттернов. Слабая связанность компонентов
+                                и естественная масштабируемость требуют дополнительных механизмов отслеживания
+                                и отладки потоков событий</p>
+                        </div>
+                        <div class="criteria-box" style="padding: 0.8em;">
+                            <h4>
+                                <svg class="icon">
+                                    <use href="#icon-stream"/>
+                                </svg>
+                                Реактивные потоки
+                            </h4>
+                            <p>Интеграция через RxJS observables и reactive extensions. Декларативная обработка
+                                асинхронных операций и композиция потоков данных создают мощную, но требующую
+                                специфических знаний экосистему разработки</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section__title" style="margin-bottom: 0.5em">Критерии эффективности</h2>
+            <div class="section__content">
+                <div class="section__main" style="gap: 0.8em;">
+                    <div class="criteria-intro">
+                        <p>
+                            Представленная классификация демонстрирует многообразие архитектурных решений.
+                            Для объективной оценки подходов разработана система из <strong>семи ключевых
+                            критериев</strong>,
+                            охватывающих технические, операционные и пользовательские аспекты многопользовательских
+                            приложений.
+                        </p>
+                    </div>
+
+                    <div class="grid-criteria">
+                        <div class="criteria-card">
+                            <svg class="icon">
+                                <use href="#icon-performance"/>
+                            </svg>
+                            <div class="criteria-card__content">
+                                <h4>Производительность</h4>
+                                <p>Скорость обработки операций, задержки обновлений и эффективность использования
+                                    ресурсов клиента и сервера</p>
+                            </div>
+                        </div>
+
+                        <div class="criteria-card">
+                            <svg class="icon">
+                                <use href="#icon-scalability"/>
+                            </svg>
+                            <div class="criteria-card__content">
+                                <h4>Масштабируемость</h4>
+                                <p>Способность системы поддерживать рост числа пользователей и объема данных без
+                                    деградации производительности</p>
+                            </div>
+                        </div>
+
+                        <div class="criteria-card">
+                            <svg class="icon">
+                                <use href="#icon-resilience"/>
+                            </svg>
+                            <div class="criteria-card__content">
+                                <h4>Отказоустойчивость</h4>
+                                <p>Устойчивость к сетевым сбоям, отказам серверов и способность к восстановлению при
+                                    сохранении данных</p>
+                            </div>
+                        </div>
+
+                        <div class="criteria-card">
+                            <svg class="icon">
+                                <use href="#icon-consistency"/>
+                            </svg>
+                            <div class="criteria-card__content">
+                                <h4>Согласованность данных</h4>
+                                <p>Гарантия идентичного состояния для всех пользователей и корректное разрешение
+                                    конфликтующих операций</p>
+                            </div>
+                        </div>
+
+                        <div class="criteria-card">
+                            <svg class="icon">
+                                <use href="#icon-developer"/>
+                            </svg>
+                            <div class="criteria-card__content">
+                                <h4>Удобство разработки</h4>
+                                <p>Простота реализации, поддержки и расширения системы, качество документации и
+                                    инструментов разработчика</p>
+                            </div>
+                        </div>
+
+                        <div class="criteria-card">
+                            <svg class="icon">
+                                <use href="#icon-security"/>
+                            </svg>
+                            <div class="criteria-card__content">
+                                <h4>Безопасность</h4>
+                                <p>Защита от несанкционированного доступа, целостность данных и соответствие стандартам
+                                    информационной безопасности</p>
+                            </div>
+                        </div>
+
+                        <div class="criteria-card"
+                             style="grid-column: 1 / -1; max-width: 50%; margin: 0 auto; width: 100%;">
+                            <svg class="icon">
+                                <use href="#icon-users"/>
+                            </svg>
+                            <div class="criteria-card__content">
+                                <h4>Пользовательский опыт</h4>
+                                <p>Отзывчивость интерфейса, прозрачность совместной работы и интуитивность
+                                    взаимодействия при коллаборации</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section__title">Детализация критериев эффективности (1/2)</h2>
+            <div class="section__content">
+                <div class="section__main" style="gap: 0.5em;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th style="width: 18%;">Критерий</th>
+                                <th style="width: 41%;">Ключевые метрики</th>
+                                <th style="width: 41%;">Методы оценки</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td style="white-space: nowrap"><strong>
+                                    <svg class="icon">
+                                        <use href="#icon-performance"/>
+                                    </svg>
+                                    Производительность</strong></td>
+                                <td>
+                                    • Задержка обновления: 100-150 мс<br>
+                                    • Пропускная способность при пиках<br>
+                                    • Потребление ресурсов клиента<br>
+                                    • Время инициализации
+                                </td>
+                                <td>
+                                    • Инструментирование кода<br>
+                                    • Нагрузочное тестирование<br>
+                                    • Профилирование браузера
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="white-space: nowrap"><strong>
+                                    <svg class="icon">
+                                        <use href="#icon-scalability"/>
+                                    </svg>
+                                    Масштабируемость</strong></td>
+                                <td>
+                                    • Рост производительности при увеличении пользователей<br>
+                                    • Работа с проектами разной сложности<br>
+                                    • Горизонтальное масштабирование
+                                </td>
+                                <td>
+                                    • Синтетические проекты<br>
+                                    • Постепенное увеличение нагрузки<br>
+                                    • Анализ потребления ресурсов
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="white-space: nowrap"><strong>
+                                    <svg class="icon">
+                                        <use href="#icon-resilience"/>
+                                    </svg>
+                                    Отказоустойчивость</strong></td>
+                                <td>
+                                    • Устойчивость к сетевым разрывам<br>
+                                    • Устойчивость к серверным сбоям<br>
+                                    • Разрешение конфликтов данных
+                                </td>
+                                <td>
+                                    • Имитация сбоев<br>
+                                    • Измерение времени восстановления<br>
+                                    • Анализ алгоритмов конфликтов
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="white-space: nowrap"><strong>
+                                    <svg class="icon">
+                                        <use href="#icon-consistency"/>
+                                    </svg>
+                                    Согласованность данных</strong></td>
+                                <td>
+                                    • Конвергенция состояния всех клиентов<br>
+                                    • Независимость от порядка операций
+                                </td>
+                                <td>
+                                    • Анализ конечного состояния<br>
+                                    • Серии конфликтующих изменений
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+        <section>
+            <h2 class="section__title">Детализация критериев эффективности (2/2)</h2>
+            <div class="section__content">
+                <div class="section__main" style="gap: 0.5em;">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th style="width: 18%;">Критерий</th>
+                                <th style="width: 41%;">Ключевые метрики</th>
+                                <th style="width: 41%;">Методы оценки</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td style="white-space: nowrap"><strong>
+                                    <svg class="icon">
+                                        <use href="#icon-developer"/>
+                                    </svg>
+                                    Удобство разработки</strong></td>
+                                <td>
+                                    • Цикломатическая сложность кода<br>
+                                    • Тестируемость компонентов<br>
+                                    • Простота расширения функциональности<br>
+                                    • Возможности мониторинга
+                                </td>
+                                <td>
+                                    • Статический анализ кода<br>
+                                    • Измерение покрытия тестами<br>
+                                    • Оценка связанности модулей
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="white-space: nowrap"><strong>
+                                    <svg class="icon">
+                                        <use href="#icon-security"/>
+                                    </svg>
+                                    Безопасность</strong></td>
+                                <td>
+                                    • Аутентификация с контролем доступа<br>
+                                    • Валидация операций на сервере<br>
+                                    • Шифрование данных
+                                </td>
+                                <td>
+                                    • Тестирование на типовые атаки<br>
+                                    • Проверка механизмов защиты<br>
+                                    • Аудит безопасности
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="white-space: nowrap"><strong>
+                                    <svg class="icon">
+                                        <use href="#icon-users"/>
+                                    </svg>
+                                    Пользовательский опыт</strong></td>
+                                <td>
+                                    • Отзывчивость интерфейса<br>
+                                    • Визуализация действий участников<br>
+                                    • Прозрачность разрешения конфликтов
+                                </td>
+                                <td>
+                                    • Замеры времени отклика<br>
+                                    • Пользовательское тестирование<br>
+                                    • Анализ сценариев взаимодействия
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+
+        <style>
+            .table-detailing {
+                td {
+                    padding: 0.5em !important;
+                }
+            }
+
+        </style>
+
+        <section class="section--full">
+            <h2 class="section__title">Детализация критерия "Производительность"</h2>
+            <div class="section__content">
+                <div class="section__main" style="gap: 0.6em;">
+                    <div class="criteria-intro">
+                        <p style="font-size: 0.6em; text-align: left">
+                            Производительность — <strong>критический фактор UX</strong>. Задержки >100 мс воспринимаются
+                            как заметные, >1 с приводят к потере концентрации пользователя.
+                        </p>
+                    </div>
+
+                    <div class="table-wrapper table-detailing">
+                        <table style="font-size: 0.6em;">
+                            <thead>
+                            <tr>
+                                <th style="width: 25%;">Метрика</th>
+                                <th style="width: 20%;">Единица измерения</th>
+                                <th style="width: 25%;">Целевое значение</th>
+                                <th style="width: 30%;">Метод вычисления</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><strong>Задержка обновления UI</strong><br><small>Время от операции до
+                                    отображения</small></td>
+                                <td>миллисекунды (мс)</td>
+                                <td>≤ 100-150 мс<br><small>(оптимально < 50 мс)</small></td>
+                                <td>performance.now() до и после операции; 95-й перцентиль выборки</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Пропускная способность</strong><br><small>Количество обрабатываемых
+                                    операций</small></td>
+                                <td>операций/секунду</td>
+                                <td>> 1000 ops/s<br><small>(зависит от типа операций)</small></td>
+                                <td>Нагрузочное тестирование с постепенным увеличением RPS до деградации</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Потребление памяти</strong><br><small>RAM клиента</small></td>
+                                <td>мегабайты (МБ)</td>
+                                <td>< 150 МБ<br><small>(для среднего проекта)</small></td>
+                                <td>performance.memory API; профилировщик Chrome DevTools (heap snapshot)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Сетевой трафик</strong><br><small>Объем передаваемых данных</small></td>
+                                <td>килобайты/секунду (КБ/с)</td>
+                                <td>< 50 КБ/с<br><small>(при активном редактировании)</small></td>
+                                <td>Network Monitor; анализ WebSocket/HTTP трафика за временной интервал</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Время инициализации</strong><br><small>Загрузка + синхронизация</small></td>
+                                <td>секунды (с)</td>
+                                <td>< 3 с<br><small>(до interactive state)</small></td>
+                                <td>Lighthouse Performance Score; Time to Interactive (TTI) метрика</td>
+                            </tr>
+                            <tr>
+                                <td><strong>CPU-нагрузка</strong><br><small>Использование процессора</small></td>
+                                <td>проценты (%)</td>
+                                <td>< 30% в idle<br>< 70% при активности</td>
+                                <td>Chrome Task Manager; long task detection (> 50ms main thread blocking)</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8em; margin-top: 0.5em;">
+                        <div class="criteria-box" style="padding: 0.6em;">
+                            <h4 style="font-size: 0.75em; margin-bottom: 0.3em;">
+                                <svg class="icon">
+                                    <use href="#icon-performance"/>
+                                </svg>
+                                Инструменты тестирования
+                            </h4>
+                            <p style="font-size: 0.6em;">
+                                • <strong>Browser DevTools:</strong> Performance tab, Memory profiler<br>
+                                • <strong>Lighthouse:</strong> автоматизированный аудит производительности<br>
+                                • <strong>K6, Artillery:</strong> нагрузочное тестирование серверной части<br>
+                                • <strong>React DevTools Profiler:</strong> анализ рендеринга компонентов
+                            </p>
+                        </div>
+                        <div class="criteria-box" style="padding: 0.6em;">
+                            <h4 style="font-size: 0.75em; margin-bottom: 0.3em;">
+                                <svg class="icon">
+                                    <use href="#icon-scalability"/>
+                                </svg>
+                                Методология замеров
+                            </h4>
+                            <p style="font-size: 0.6em;">
+                                • <strong>Baseline:</strong> измерение в idle состоянии (1 пользователь)<br>
+                                • <strong>Load testing:</strong> 10, 50, 100, 500 одновременных пользователей<br>
+                                • <strong>Stress testing:</strong> пиковые нагрузки до точки отказа<br>
+                                • <strong>Soak testing:</strong> длительная работа под нагрузкой (утечки памяти)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+
+
+        <style>
+            .conclusion-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.8em;
+            }
+
+            .conclusion-card {
+                background: linear-gradient(135deg, rgba(144, 43, 244, 0.1), rgba(144, 43, 244, 0.05));
+                padding: 0.8em;
+                border-radius: 12px;
+                border-left: 4px solid var(--r-background-color);
+                transition: all 0.3s ease;
+            }
+
+            .conclusion-card:hover {
+                transform: translateX(5px);
+                background: linear-gradient(135deg, rgba(144, 43, 244, 0.15), rgba(144, 43, 244, 0.08));
+            }
+
+            .conclusion-card h4 {
+                margin: 0 0 0.5em 0;
+                font-size: 0.9em;
+                display: flex;
+                align-items: center;
+                gap: 0.5em;
+            }
+
+            .conclusion-card p {
+                margin: 0;
+                font-size: 0.75em;
+                line-height: 1.4;
+            }
+
+            .conclusion-highlight {
+                background: var(--r-background-color);
+                color: white;
+                padding: 1em;
+                border-radius: 15px;
+                text-align: center;
+            }
+
+            .conclusion-highlight h3 {
+                margin: 0 0 0.5em 0;
+                font-size: 1.1em;
+                color: inherit;
+            }
+
+            .conclusion-highlight p {
+                margin: 0;
+                font-size: 0.85em;
+                line-height: 1.5;
+                text-align: left;
+            }
+
+        </style>
+        <section>
+            <h2 class="section__title">Выводы и рекомендации</h2>
+            <div class="section__content">
+                <div class="section__main">
+                    <div class="conclusion-grid">
+                        <div class="conclusion-card">
+                            <h4>
+                                <svg class="icon" style="width: 1.5em; height: 1.5em;">
+                                    <use href="#icon-performance"/>
+                                </svg>
+                                Комплексная оценка
+                            </h4>
+                            <p>Разработанные 7 критериев охватывают технические, операционные и пользовательские
+                                аспекты, обеспечивая объективное сравнение архитектурных решений</p>
+                        </div>
+
+                        <div class="conclusion-card">
+                            <h4>
+                                <svg class="icon" style="width: 1.5em; height: 1.5em;">
+                                    <use href="#icon-security"/>
+                                </svg>
+                                Фокус на безопасность
+                            </h4>
+                            <p>Каждый параметр связан с защитой информации: производительность блокирует угрозы,
+                                масштабируемость сохраняет контроль при росте нагрузки</p>
+                        </div>
+
+                        <div class="conclusion-card">
+                            <h4>
+                                <svg class="icon" style="width: 1.5em; height: 1.5em;">
+                                    <use href="#icon-scalability"/>
+                                </svg>
+                                Адаптивность решений
+                            </h4>
+                            <p>Классификация по 4 осям позволяет подбирать архитектуру под конкретные требования
+                                проекта с учетом компромиссов</p>
+                        </div>
+                    </div>
+
+                    <div class="conclusion-highlight">
+                        <h3>Рекомендуемая архитектура для критичных систем</h3>
+                        <p>
+                            <strong>Гибридный подход:</strong> клиентское управление интерфейсом + серверная валидация
+                            операций<br>
+                            <strong>Коммуникация:</strong> WebSockets с автоматическим fallback на HTTP<br>
+                            <strong>Согласованность:</strong> CRDT для неструктурированных данных, OT для текста<br>
+                            <strong>Интеграция:</strong> Middleware-слой для централизованного контроля безопасности
+                        </p>
+                    </div>
+                </div>
+                <div class="section__right">
+                    <div class="section__circle"></div>
+                    <div class="section__circle"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="title-slide">
+            <div class="content content--center">
+                <h1>Спасибо за внимание!</h1>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+<script>
+    Reveal.initialize({
+        hash: true,
+        slideNumber: 'c/t',
+        showSlideNumber: 'all',
+        transition: 'concave',
+        width: 1280,
+        height: 720,
+        fragments: false,
+        controls: true,
+        progress: true,
+        center: false
+    });
+</script>
+</body>
+</html>
